@@ -1,55 +1,47 @@
-#https://github.com/meemknight/cmakeSetup
-
 cmake_minimum_required(VERSION 3.16)
-
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") #we want to use the static runtime
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
 project(mygame)
 
+# Only one correct way to set static runtime
+if(MSVC)
+    # Use static runtime: /MT for release, /MTd for debug
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+# GLFW options
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory(thirdparty/glfw-3.3.2)			#window oppener
-add_subdirectory(thirdparty/glad)				#opengl loader
-add_subdirectory(thirdparty/stb_image)			#loading immaged
-add_subdirectory(thirdparty/stb_truetype)		#loading ttf files
-add_subdirectory(thirdparty/glm)				#math
-add_subdirectory(thirdparty/imgui-docking)		#ui
 
+# Add third-party libraries
+add_subdirectory(thirdparty/glfw-3.3.2)
+add_subdirectory(thirdparty/glad)
+add_subdirectory(thirdparty/glm)
+add_subdirectory(thirdparty/imgui-docking)
 
-# Define MY_SOURCES to be a list of all the source files for my game 
+# Source files
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
+add_executable(${PROJECT_NAME}
+        include/Window.h
+)
 
-add_executable("${CMAKE_PROJECT_NAME}")
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 
-set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY CXX_STANDARD 17)
+# Resource path
+target_compile_definitions(${PROJECT_NAME} PUBLIC RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/resources/")
 
-target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/resources/") # This is useful to get an ASSETS_PATH in your IDE during development but you should comment this if you compile a release version and uncomment the next line
-#target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC RESOURCES_PATH="./resources/") # Uncomment this line to setup the ASSETS_PATH macro to the final assets directory when you share the game
+# Add sources
+target_sources(${PROJECT_NAME} PRIVATE ${MY_SOURCES} 
 
+)
 
-target_sources("${CMAKE_PROJECT_NAME}" PRIVATE ${MY_SOURCES}  "include/Game.h" "src/Shader.cpp" "include/Shader.h" "include/Texture.h" "src/Texture.cpp" "include/ResourceManger.h" "src/ResourceManager.cpp" "src/Game.cpp" "src/Program.cpp" "include/SpriteRenderer.h" "src/SpriteRenderer.cpp" "include/GameObject.h" "src/GameObject.cpp" "src/GameLevel.cpp" "include/GameLevel.h" "src/Ball.cpp" "include/Ball.h" "include/Collider.h" "include/PhysicsUtility.h" "src/PhysicsUtility.cpp" "src/Collider.cpp")
-
-
-if(MSVC) # If using the VS compiler...
-
-	target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC _CRT_SECURE_NO_WARNINGS)
-
-	#remove console
-	#set_target_properties("${CMAKE_PROJECT_NAME}" PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-	
-	set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreadedDebug<$<CONFIG:Debug>:Debug>")
-	set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
-
+# MSVC specific
+if(MSVC)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC _CRT_SECURE_NO_WARNINGS)
 endif()
 
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
-target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-
-
-target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw 
-	glad stb_image stb_truetype imgui)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE glm glfw glad imgui)
