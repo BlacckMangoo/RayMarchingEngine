@@ -25,6 +25,10 @@ file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/
 
 add_executable(${PROJECT_NAME}
         include/Window.h
+        include/App.h
+        src/App.cpp
+        include/InputManager.h
+        src/Triangle.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
